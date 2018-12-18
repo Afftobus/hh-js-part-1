@@ -34,7 +34,7 @@ const Graph = {
     calcVertex(vertex, recalc) {    // считаем конкретный узел,
         // опция recalc позволяет пересчитать весь путь до узла
         if(!this.graph || typeof this.graph !== "object" || typeof this.graph[vertex] !== 'function')
-            throw "Bad graph vertex, please use receiveGraphLazy or receiveGraphEager before calculate vertex ";
+            throw new Error("Bad graph vertex, please use receiveGraphLazy or receiveGraphEager before calculate vertex ");
 
         if(typeof recalc === 'undefined')
             recalc = false;
@@ -53,7 +53,7 @@ const Graph = {
 
     __parseArgs(func) {  //да, я сдался и пошел простым путём парсинга формальных параметров
         if (typeof func !== 'function')
-            throw "Bad parameter type in function __parseArgs";
+            throw new Error("Bad parameter type in function __parseArgs");
 
         let args =
             this.graph[func.name].toString()
@@ -90,13 +90,10 @@ const Graph = {
     __getVertex(vertex){    // находим значение для узла
 
         //console.log("__getVertex = " + vertex);
-        if (this.callStack[vertex])
-        {
-            console.log("Callstack:");
-            console.log(this.callStack);
-            throw ("Circle connectivity detected on vertex " + vertex);
-        }
-        this.callStack[vertex] = true;
+        if (this.callStack.includes(vertex))
+            throw new Error("Circle connectivity detected. Callstack " + this.callStack.join(' > ',this.callStack) + ' > ' + vertex );
+
+        this.callStack.push(vertex);
 
         if (this.results === null)
             this.results = [];
@@ -109,7 +106,7 @@ const Graph = {
         else
             result = this.results[vertex];
 
-        this.callStack[vertex] = false;
+        this.callStack.pop();
 
         return result;
     }
@@ -117,8 +114,9 @@ const Graph = {
 };
 
 Graph.receiveGraphLazy(myAmazingGraph);
-Graph.receiveGraphEager(myAmazingGraph);
+//Graph.receiveGraphEager(myAmazingGraph);
 console.log("--------");
 console.log("result = " + Graph.calcVertex('v'));
 console.log("--------");
 console.log("result = " + Graph.calcVertex('m2',true));
+
